@@ -10,4 +10,5 @@ __END__
 
 @@ index
 
-hello!
+- %w(136 97 141 142 154 159).each do |i|
+  %img{width: 40, src: "images/chara#{i}_0.gif?"}
