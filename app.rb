@@ -1,6 +1,5 @@
 require 'sinatra'
-require 'sinatra/cookies'
-require 'sinatra/reloader' if development?
+require './app_helper'
 
 class Unit
   attr_accessor :str, :agi, :vit, :img
@@ -21,29 +20,22 @@ class User
   end
 end
 
-helpers do
-  def link_to(url, txt = url) %Q|<a href="#{url}">#{txt}</a>| end
-  def dataname() (cookies[:id] ||= rand(9999_9999_9999).to_s(26)) + '.data' end
-end
-
 before do
-  @user = File.open(dataname, 'rb') {|f| Marshal.load f }
-rescue
-  @user = User.new
+  user_load
 end
 
 after do
-  File.open(dataname, 'wb') {|f| Marshal.dump @user, f }
+  user_save
 end
 
 get '/api/unit_add' do
   @user.units.push Unit.new
-  redirect '/'
+  redirect R
 end
 
 get '/api/unit_delete/:unit_id' do |unit_id|
   @user.units.delete_at unit_id.to_i
-  redirect '/'
+  redirect R
 end
 
 get '/unit/*' do |idx|
@@ -59,12 +51,12 @@ __END__
 
 @@ index
 - @user.units.each_with_index do |u, i|
-  %a{ href: "/unit/#{i}" }
-    %img{width: 40, src: "/images/chara#{u.img}_0.gif?"}
-%p= link_to '/bar', '[酒場]'
+  %a{ href: "#{R}/unit/#{i}" }
+    %img{width: 40, src: "#{Root}/images/chara#{u.img}_0.gif?"}
+%p= link_to '/bar', '[酒場へ行く]'
 
 @@ unit
-%img{ width: 80, src: "/images/chara#{@unit.img}_0.gif?" }
+%img{ width: 80, src: "#{Root}/images/chara#{@unit.img}_0.gif?" }
 %div
   %table
     - { 力: @unit.str, 素早さ: @unit.agi, HP: @unit.vit }.each do |k, v|
@@ -80,7 +72,7 @@ __END__
 
 @@ layout
 %html
-  %link{ rel: "stylesheet", href: "/css/destyle.css" }
-  %link{ rel: "stylesheet", href: "/css/simple.css?#{rand(99999)}" }
+  %link{ rel: "stylesheet", href: "#{Root}/css/destyle.css" }
+  %link{ rel: "stylesheet", href: "#{Root}/css/simple.css" }
   .main
     = yield
