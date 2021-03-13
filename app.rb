@@ -20,13 +20,8 @@ class User
   end
 end
 
-before do
-  user_load
-end
-
-after do
-  user_save
-end
+before { user_load }
+after { user_save }
 
 get '/api/unit_add' do
   @user.units.push Unit.new

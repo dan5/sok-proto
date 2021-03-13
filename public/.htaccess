@@ -1,0 +1,3 @@
+<Files ~ "\.(rb|data)$">
+  deny from all 
+</Files>
