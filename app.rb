@@ -68,6 +68,7 @@ __END__
 @@ layout
 %html
   %link{ rel: "stylesheet", href: "#{Root}/css/destyle.css" }
-  %link{ rel: "stylesheet", href: "#{Root}/css/simple.css" }
+  %link{ rel: "stylesheet", href: "#{Root}/css/app.css" }
+  %meta{ content: "text/html charset=utf-8", 'http-equiv': "content-type" }
   .main
     = yield
