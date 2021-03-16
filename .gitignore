@@ -60,3 +60,4 @@ build-iPhoneSimulator/
 /public/*.rb
 /public/*.cgi
 /data
+/config.rb

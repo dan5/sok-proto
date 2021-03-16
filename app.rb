@@ -8,7 +8,7 @@ class Unit
     @str = rand(6) + 1
     @agi = rand(6) + 1
     @vit = rand(6) + 1
-    @img = [97, 136, 141, 142, 154, 159].sample
+    @img = [0, 6, 56, 57, 58, 63].sample
   end
 end
 
@@ -49,6 +49,7 @@ __END__
   %a{ href: "#{R}/unit/#{i}" }
     %img{width: 40, src: "#{Root}/images/chara#{u.img}_0.gif?"}
 %p= link_to '/bar', '[酒場へ行く]'
+%img{width: 80, src: "#{Root}/images/mons#{1}_0.gif?"}
 
 @@ unit
 %img{ width: 80, src: "#{Root}/images/chara#{@unit.img}_0.gif?" }
