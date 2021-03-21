@@ -2,17 +2,27 @@ require 'sinatra'
 require './app_helper'
 
 class Unit
-  attr_accessor :str, :agi, :vit, :img
+  attr_accessor :str, :agi, :vit, :hp, :img
+  def name() "unit_#{@id}" end
 
   def initialize(id)
     @id = id
     @str = rand(6) + 1
     @agi = rand(6) + 1
     @vit = rand(6) + 1
+    @hp = vit
     @img = [0, 6, 56, 57, 58, 63].sample
   end
 
-  def name() "Unit#{@id}" end
+  def act(units)
+    t = units.sample
+    t.damage str
+    "#{name}(#{hp})の攻撃 -> #{t.name} -> ダメージ#{str}"
+  end
+
+  def damage(d)
+    @hp = [@hp - d, 0].max
+  end
 end
 
 class User
@@ -24,7 +34,7 @@ class User
 end
 
 Monsters = {
-  1 => Unit.new('M1'),
+  1 => Unit.new('m1'),
 }
 
 before { user_load }
@@ -48,8 +58,9 @@ end
 
 get '/battle/*' do |monster_id|
   @logs = []
-  (@user.units + [Monsters[monster_id.to_i]]).each do |e|
-    @logs << "#{e.name}の行動"
+  a = (@user.units + [Monsters[monster_id.to_i]]).select {|e| e.hp > 0 }
+  a.sort_by(&:agi).reverse.each do |e|
+    @logs << e.act(a)
   end
   haml :battle
 end
