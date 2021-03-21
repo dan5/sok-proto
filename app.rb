@@ -1,34 +1,37 @@
 require 'sinatra'
 require './app_helper'
 
-Monsters = {
-  1 => 1,
-}
-
 class Unit
   attr_accessor :str, :agi, :vit, :img
 
-  def initialize
+  def initialize(id)
+    @id = id
     @str = rand(6) + 1
     @agi = rand(6) + 1
     @vit = rand(6) + 1
     @img = [0, 6, 56, 57, 58, 63].sample
   end
+
+  def name() "Unit#{@id}" end
 end
 
 class User
   attr_reader :units
 
   def initialize
-    @units = Array.new(6) { Unit.new }
+    @units = Array.new(6) {|i| Unit.new i }
   end
 end
+
+Monsters = {
+  1 => Unit.new('M1'),
+}
 
 before { user_load }
 after { user_save }
 
 get '/api/unit_add' do
-  @user.units.push Unit.new
+  @user.units.push Unit.new @user.units.size
   redirect R
 end
 
@@ -43,10 +46,21 @@ get '/unit/*' do |idx|
   haml :unit
 end
 
+get '/battle/*' do |monster_id|
+  @logs = []
+  (@user.units + [Monsters[monster_id.to_i]]).each do |e|
+    @logs << "#{e.name}の行動"
+  end
+  haml :battle
+end
+
 get ('/bar') { haml :bar }
 get ('/') { haml :index }
 
 __END__
+
+@@ battle
+= @logs.join("<br />")
 
 @@ index
 - @user.units.each_with_index do |u, i|
@@ -55,13 +69,15 @@ __END__
 %p= link_to '/bar', '[酒場へ行く]'
 
 - Monsters.each do |k, v|
-  %img{width: 80, src: "#{Root}/images/mons#{v}_0.gif?"}
+  %a{ href: "#{R}/battle/#{k}" }
+    %img{width: 80, src: "#{Root}/images/mons#{k}_0.gif?"}
 
 @@ unit
-%img{ width: 80, src: "#{Root}/images/chara#{@unit.img}_0.gif?" }
+- u = @unit
+%img{ width: 80, src: "#{Root}/images/chara#{u.img}_0.gif?" }
 %div
   %table
-    - { 力: @unit.str, 素早さ: @unit.agi, HP: @unit.vit }.each do |k, v|
+    - { 名前: u.name, 力: u.str, 素早さ: u.agi, HP: u.vit }.each do |k, v|
       %tr
         %td= k
         %td= v
