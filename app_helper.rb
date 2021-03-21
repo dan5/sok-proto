@@ -1,6 +1,8 @@
 require 'sinatra'
 require 'sinatra/cookies'
 
+enable :sessions
+
 if 'app.rb' == $0
   require 'sinatra/reloader'
   Root = R = ''
