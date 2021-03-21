@@ -52,7 +52,7 @@ before { @user.act }
 after { user_save }
 
 get '/api/unit_add' do
-  @user.units.push Unit.new @user.units.size
+  @user.units.push Unit.new @user.units.size if @user.units.size < 6
   redirect R
 end
 
