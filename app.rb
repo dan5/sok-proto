@@ -1,6 +1,10 @@
 require 'sinatra'
 require './app_helper'
 
+Monsters = {
+  1 => 1,
+}
+
 class Unit
   attr_accessor :str, :agi, :vit, :img
 
@@ -49,7 +53,9 @@ __END__
   %a{ href: "#{R}/unit/#{i}" }
     %img{width: 40, src: "#{Root}/images/chara#{u.img}_0.gif?"}
 %p= link_to '/bar', '[酒場へ行く]'
-%img{width: 80, src: "#{Root}/images/mons#{1}_0.gif?"}
+
+- Monsters.each do |k, v|
+  %img{width: 80, src: "#{Root}/images/mons#{v}_0.gif?"}
 
 @@ unit
 %img{ width: 80, src: "#{Root}/images/chara#{@unit.img}_0.gif?" }
