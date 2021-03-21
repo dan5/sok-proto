@@ -45,15 +45,21 @@ class Chest < Unit
 end
 
 class User
-  attr_reader :units, :slots
+  attr_reader :units, :slots, :logs
 
   def initialize
     @units = Array.new(6) {|i| Unit.new i }
     @slots = Monsters.map {|e| Unit.new e }
+    @logs = []
   end
 
   def act
     @slots << Unit.new(Monsters.sample) while @slots.size < 3
+  end
+
+  def log(str)
+    @logs = @logs.first(10)
+    @logs.unshift str
   end
 end
 
@@ -73,14 +79,14 @@ get '/api/unit_delete/:unit_id' do |unit_id|
 end
 
 get '/api/battle/*' do |monster_id|
-  session[:logs] = []
   slot = @user.slots[monster_id.to_i]
   if slot.image =~ /chest/
+    @user.log '宝箱を開いた'
     @user.slots.delete slot
   else
     a = (@user.units + [slot]).select &:alive?
     a.sort_by(&:agi).reverse.each do |e|
-      session[:logs] << e.act(a) if e.alive?
+      @user.log e.act(a) if e.alive?
     end
     @user.units.delete_if &:dead?
     @user.slots.map! {|e| e.dead? ? Chest.new('m1') : e }
@@ -118,7 +124,7 @@ __END__
           %img{width: 80, src: "#{Root}/#{u.image}"}
         .status #{u.hp}/#{u.vit}
 
-%p= (session[:logs] or []).join("<br />")
+%p= @user.logs.join "<br />"
 
 @@ unit
 - u = @unit
