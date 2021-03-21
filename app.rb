@@ -10,6 +10,10 @@ class Unit
   def monster?() /m/.match @id.to_s end
   def name() "unit_#{@id}" end
 
+  def image()
+    monster? ? "images/mons#{img % 3}_0.gif" : "images/chara#{img}_0.gif"
+  end
+
   def initialize(id)
     @id = id
     @str = rand(6) + 1
@@ -34,16 +38,22 @@ class Unit
   end
 end
 
+class Chest < Unit
+  def image()
+    "chests/chest1_0_1.png"
+  end
+end
+
 class User
-  attr_reader :units, :monsters
+  attr_reader :units, :slots
 
   def initialize
     @units = Array.new(6) {|i| Unit.new i }
-    @monsters = Monsters.map {|e| Unit.new e }
+    @slots = Monsters.map {|e| Unit.new e }
   end
 
   def act
-    @monsters << Unit.new(Monsters.sample) while @monsters.size < 3
+    @slots << Unit.new(Monsters.sample) while @slots.size < 3
   end
 end
 
@@ -64,12 +74,17 @@ end
 
 get '/api/battle/*' do |monster_id|
   session[:logs] = []
-  a = (@user.units + @user.monsters[monster_id.to_i, 1]).select &:alive?
-  a.sort_by(&:agi).reverse.each do |e|
-    session[:logs] << e.act(a) if e.alive?
+  slot = @user.slots[monster_id.to_i]
+  if slot.image =~ /chest/
+    @user.slots.delete slot
+  else
+    a = (@user.units + [slot]).select &:alive?
+    a.sort_by(&:agi).reverse.each do |e|
+      session[:logs] << e.act(a) if e.alive?
+    end
+    @user.units.delete_if &:dead?
+    @user.slots.map! {|e| e.dead? ? Chest.new('m1') : e }
   end
-  @user.units.delete_if &:dead?
-  @user.monsters.delete_if &:dead?
   redirect R
 end
 
@@ -90,17 +105,17 @@ __END__
     - @user.units.each_with_index do |u, i|
       %td
         %a{ href: "#{R}/unit/#{i}" }
-          %img{width: 40, src: "#{Root}/images/chara#{u.img}_0.gif?"}
+          %img{width: 40, src: "#{Root}/#{u.image}"}
         .status #{u.hp}/#{u.vit}
 
 %p= link_to '/bar', '[酒場へ行く]'
 
 %table
   %tr
-    - @user.monsters.each_with_index do |u, i|
+    - @user.slots.each_with_index do |u, i|
       %td
         %a{ href: "#{R}/api/battle/#{i}" }
-          %img{width: 80, src: "#{Root}/images/mons#{u.img % 3}_0.gif?"}
+          %img{width: 80, src: "#{Root}/#{u.image}"}
         .status #{u.hp}/#{u.vit}
 
 %p= (session[:logs] or []).join("<br />")
