@@ -41,9 +41,14 @@ class User
     @units = Array.new(6) {|i| Unit.new i }
     @monsters = Monsters.map {|e| Unit.new e }
   end
+
+  def act
+    @monsters << Unit.new(Monsters.sample) while @monsters.size < 3
+  end
 end
 
 before { user_load }
+before { @user.act }
 after { user_save }
 
 get '/api/unit_add' do
@@ -63,6 +68,7 @@ get '/api/battle/*' do |monster_id|
     session[:logs] << e.act(a) if e.alive?
   end
   @user.units.delete_if &:dead?
+  @user.monsters.delete_if &:dead?
   redirect R
 end
 
@@ -93,7 +99,7 @@ __END__
     - @user.monsters.each_with_index do |u, i|
       %td
         %a{ href: "#{R}/api/battle/#{i}" }
-          %img{width: 80, src: "#{Root}/images/mons#{i}_0.gif?"}
+          %img{width: 80, src: "#{Root}/images/mons#{u.img % 3}_0.gif?"}
         .status #{u.hp}/#{u.vit}
 
 %p= (session[:logs] or []).join("<br />")
