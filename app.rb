@@ -23,7 +23,7 @@ class Unit
     @img = [0, 6, 56, 57, 58, 63].sample
   end
 
-  def act(units)
+  def battle_act(units)
     "#{name}(#{hp})の攻撃 -> " +
       if t = units.select(&:alive?).select {|e| monster? != e.monster? }.sample
         t.damage str
@@ -40,21 +40,18 @@ end
 
 class Chest < Unit
   def image()
-    "chests/chest1_0_1.png"
+    "chests/chest#{img % 3}_0_1.png"
   end
 end
 
 class User
   attr_reader :units, :slots, :logs
 
-  def initialize
-    @units = Array.new(6) {|i| Unit.new i }
-    @slots = Monsters.map {|e| Unit.new e }
-    @logs = []
-  end
-
   def act
+    @units ||= Array.new(6) {|i| Unit.new i }
+    @slots ||= []
     @slots << Unit.new(Monsters.sample) while @slots.size < 3
+    @logs ||= []
   end
 
   def log(str)
@@ -63,30 +60,28 @@ class User
   end
 end
 
-before { user_load }
+before { user_load.act }
 after { user_save }
 
 get '/api/unit_add' do
   @user.units.push Unit.new @user.units.size if @user.units.size < 6
-  @user.act
   redirect R
 end
 
 get '/api/unit_delete/:unit_id' do |unit_id|
   @user.units.delete_at unit_id.to_i
-  @user.act
   redirect R
 end
 
 get '/api/battle/*' do |monster_id|
   slot = @user.slots[monster_id.to_i]
   if slot.image =~ /chest/
-    @user.log '宝箱を開いた'
+    @user.log '宝箱が開いた'
     @user.slots.delete slot
   else
     a = (@user.units + [slot]).select &:alive?
     a.sort_by(&:agi).reverse.each do |e|
-      @user.log e.act(a) if e.alive?
+      @user.log e.battle_act(a) if e.alive?
     end
     @user.units.delete_if &:dead?
     @user.slots.map! {|e| e.dead? ? Chest.new('m1') : e }
